@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<carstore>
+    <employee>
+        <model lang="en">Scania R 770</model>
+        <year>2005</year>
+        <price currency="US dollar">200000.00</price>
+    </employee>
+    <car category="sedan">
+        <title lang="en">Ford Focus</title>
+        <year>2012</year>
+        <price currency="US dollar">20000.00</price>
+    </car>
+    <car category="sport">
+        <title lang="en">Ferrari 360 Spider</title>
+        <year>2018</year>
+        <price currency="US dollar">150000.00</price>
+    </car>
+</carstore>
