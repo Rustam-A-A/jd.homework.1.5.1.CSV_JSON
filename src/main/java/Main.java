@@ -7,21 +7,20 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
     private static String csvFileName = "data.csv";
     private static String jsonFileName = "new-data.json";
     private static String xmlFileName = "data.xml";
-    //private static String xmlFileName = "example.xml";
+    private static String jsonFileName2 = "new-data-2.json";
 
     public static void main(String[] args) throws DOMException, IOException, SAXException, NullPointerException, ParserConfigurationException, ParserConfigurationException {
 
@@ -38,50 +37,61 @@ public class Main {
         //getting list of emloyees from csv-file
         String[] columnMapping = {"id", "firstName", "lastName", "country", "age"};
         List<Employee> list = parseCSV(columnMapping, csvFileName);
-        //System.out.println(list.toString());
 
         //getting list of emloyees from xml-file
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(xmlFileName);
-
-        Node root = doc.getDocumentElement();
-        System.out.println("Root element: " + root.getNodeName());
-        NodeList nodeList = root.getChildNodes();
-        //System.out.println("nodeList length: " + nodeList.getLength());
-        for (int j = 0; j < nodeList.getLength(); j++){
-            Node node = nodeList.item(j);
-            if (node.getNodeType() == Node.ELEMENT_NODE){
-                System.out.println("  current element: " + node.getNodeName());
-
-                if (node.getNodeName().equals("employee")) {
-                    Element employee = (Element) node;
-                    NodeList attributesList = employee.getChildNodes();
-
-                    for (int l = 0; l < attributesList.getLength(); l++) {
-                        if (attributesList.item(l).getNodeType() == Node.ELEMENT_NODE){
-                            System.out.println("    attribute: " +
-                                    node.getChildNodes().item(l).getNodeName() + "  " +
-                                    node.getChildNodes().item(l).getNodeValue());
-                        }
-
-                    }
-
-                }
-            }
-        }
-
+        List<Employee> list2 = parseXML(xmlFileName);
 
         //creating of json-file and writting out data into it
-        try (FileWriter file = new FileWriter(jsonFileName)){
+        jsonFileWriteDown(jsonFileName, list);
+        jsonFileWriteDown(jsonFileName2, list2);
+    }
+
+    //method to create json-file and fill it out from List<>list
+    public static void jsonFileWriteDown(String jsonFileToWrite, List<Employee> list) {
+        try (FileWriter file = new FileWriter(jsonFileToWrite)){
             file.write(listToJson(list));
             file.flush();
         }catch (IOException e){
             e.printStackTrace();
         }
-
     }
 
+    //method to parse xml-file
+    private static List<Employee> parseXML(String fileName) throws ParserConfigurationException, IOException, SAXException {
+        List<Employee> list2 = new ArrayList<>();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(xmlFileName);
+        Node root = doc.getDocumentElement();
+        NodeList nodeList = root.getChildNodes();
+        for (int j = 0; j < nodeList.getLength(); j++){
+            Node node = nodeList.item(j);
+            if (node.getNodeType() == Node.ELEMENT_NODE){
+                if (node.getNodeName().equals("employee")) {
+                    Element employee = (Element) node;
+                    NodeList attributesList = employee.getChildNodes();
+                    int k = 0;
+                    String[]str = new String[5];
+                    for (int l = 0; l < attributesList.getLength(); l++) {
+                        if (attributesList.item(l).getNodeType() == Node.ELEMENT_NODE){
+                            str[k] = node.getChildNodes().item(l).getTextContent();
+                            k++;
+                        }
+                    }
+                    long id = Long.parseLong(str[0]);
+                    String firstName = str[1];
+                    String lastName = str[2];
+                    String country = str[3];
+                    int age = Integer.parseInt(str[4]);
+                    Employee empl = new Employee(id, firstName, lastName, country, age);
+                    list2.add(empl);
+                }
+            }
+        }
+        return list2;
+    }
+
+    //to create String json
     private static String listToJson(List<Employee> list) {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = new Gson();
@@ -89,6 +99,7 @@ public class Main {
         return json;
     }
 
+    //method to parse csv-file
     private static  List<Employee> parseCSV(String[] columnMapping, String fileName) {
         List<Employee> staff = null;
         try (CSVReader reader = new CSVReader(new FileReader(fileName))) {
@@ -99,7 +110,7 @@ public class Main {
                     .withMappingStrategy(strategy)
                     .build();
             staff = csv.parse();
-            staff.forEach(System.out::println);
+            //staff.forEach(System.out::println);
         } catch (IOException e) {
             e.printStackTrace();
         }
